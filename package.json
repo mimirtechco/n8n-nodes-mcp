@@ -1,5 +1,5 @@
 {
-	"name": "n8n-nodes-mcp",
+	"name": "@mimirtech/n8n-nodes-mcp",
 	"version": "0.2.2",
 	"description": "Model Context Protocol (MCP) client nodes for n8n - Connect to MCP servers via STDIO, SSE, or HTTP with AI agent integration",
 	"keywords": [
