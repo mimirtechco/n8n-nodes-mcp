@@ -493,13 +493,11 @@ export class McpClient implements INodeType {
 							description: tool.description || `Execute the ${tool.name} tool`,
 							schema: paramSchema,
 							func: async (params) => {
-								try {
-									const result = await client.callTool({
-										name: tool.name,
-										arguments: params,
-									}, CallToolResultSchema, requestOptions);
-
-									return typeof result === 'object' ? JSON.stringify(result) : String(result);
+							try {
+								const result = await client.callTool({
+									name: tool.name,
+									arguments: params as unknown as Record<string, unknown>,
+								}, CallToolResultSchema, requestOptions);									return typeof result === 'object' ? JSON.stringify(result) : String(result);
 								} catch (error) {
 									throw new NodeOperationError(
 										this.getNode(),
@@ -512,10 +510,10 @@ export class McpClient implements INodeType {
 
 					returnData.push({
 						json: {
-							tools: aiTools.map((t: DynamicStructuredTool) => ({
+							tools: aiTools.map((t: any) => ({
 								name: t.name,
 								description: t.description,
-								schema: zodToJsonSchema(t.schema as z.ZodTypeAny || z.object({})),
+								schema: zodToJsonSchema(t.schema as any),
 							})),
 						},
 					});
