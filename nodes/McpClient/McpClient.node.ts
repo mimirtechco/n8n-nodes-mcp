@@ -363,21 +363,15 @@ export class McpClient implements INodeType {
 				};
 			}
 
-			const client = new Client(
-				{
-					name: `${McpClient.name}-client`,
-					version: '1.0.0',
-				},
-				{
-					capabilities: {
-						prompts: {},
-						resources: {},
-						tools: {},
-					},
-				},
-			);
-
-			try {
+		const client = new Client(
+			{
+				name: `${McpClient.name}-client`,
+				version: '1.0.0',
+			},
+			{
+				capabilities: {},
+			},
+		);			try {
 				if (!transport) {
 					throw new NodeOperationError(this.getNode(), 'No transport available');
 				}
