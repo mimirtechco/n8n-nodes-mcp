@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.3] - 2025-11-23
+
+### Fixed
+- **Critical: Resolved Zod dependency conflict preventing n8n installation**
+  - Removed zod version pinning (was 3.24.0) that lacked `/v3` export required by n8n
+  - Added zod as peerDependency (>=3.23.0) to allow n8n to use its preferred version
+  - Fixed TypeScript compilation errors with proper type casting for Zod objects
+  - Updated `callTool` arguments to use `unknown` intermediate casting
+  - Used `any` type for aiTools mapping to avoid version conflicts between dependencies
+  - Disabled `noUnusedLocals` in tsconfig.json to resolve NodeConnectionType import issue
+  - Added NodeConnectionType mock in test suite for compatibility
+
+### Changed
+- Improved TypeScript configuration for better compatibility with n8n ecosystem
+- Enhanced test suite with proper mocking of n8n-workflow dependencies
+
 ## [0.2.2] - 2025-11-22
 
 ### Changed

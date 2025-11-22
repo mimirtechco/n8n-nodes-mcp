@@ -70,22 +70,10 @@
 	"dependencies": {
 		"@langchain/core": "0.3.43",
 		"@modelcontextprotocol/sdk": "^1.22.0",
-		"zod": "3.24.0",
 		"zod-to-json-schema": "^3.24.6"
 	},
-	"resolutions": {
-		"zod": "3.24.0"
-	},
-	"overrides": {
-		"pkce-challenge": "3.0.0",
-		"zod": "3.24.0"
-	},
-	"pnpm": {
-		"overrides": {
-			"zod": "3.24.0"
-		}
-	},
 	"peerDependencies": {
-		"n8n-workflow": "*"
+		"n8n-workflow": "*",
+		"zod": ">=3.23.0"
 	}
 }

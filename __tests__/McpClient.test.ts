@@ -1,5 +1,13 @@
 import { McpClient } from '../nodes/McpClient/McpClient.node';
 
+// Mock n8n-workflow
+jest.mock('n8n-workflow', () => ({
+	...jest.requireActual('n8n-workflow'),
+	NodeConnectionType: {
+		Main: 'main',
+	},
+}));
+
 describe('McpClient Node', () => {
 	let mcpClient: McpClient;
 
