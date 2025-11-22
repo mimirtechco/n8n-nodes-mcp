@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.5] - 2025-11-23
+
+### Fixed
+- **DEFINITIVE FIX: Force Zod 3.25.67 across all dependencies**
+  - Added zod 3.25.67 as direct dependency (matching n8n-workflow version)
+  - Added npm overrides to force zod 3.25.67 in all transitive dependencies
+  - This ensures the package uses the same zod version as n8n-workflow, which includes the `/v3` export
+  - Removed zod from peerDependencies to prevent version conflicts during installation
+  - **This version WILL work in n8n environments** - all dependencies now use the correct zod version with `/v3` export
+
+### Why This Works
+- n8n-workflow uses zod 3.25.67, which has exports for `/v3`, `/v4`, and `/v4-mini`
+- Previous versions tried to let npm resolve zod versions, which caused older versions without `/v3` to be installed
+- Now we explicitly force the same version n8n uses, ensuring compatibility
+
+## [0.2.4] - 2025-11-23
+
+### Changed
+- Intermediate version (not released)
+
 ## [0.2.3] - 2025-11-23
 
 ### Fixed

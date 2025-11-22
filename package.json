@@ -1,6 +1,6 @@
 {
 	"name": "@mimirtech/n8n-nodes-mcp",
-	"version": "0.2.4",
+	"version": "0.2.5",
 	"description": "Model Context Protocol (MCP) client nodes for n8n - Connect to MCP servers via STDIO, SSE, or HTTP with AI agent integration",
 	"keywords": [
 		"n8n-community-node-package",
@@ -70,10 +70,13 @@
 	"dependencies": {
 		"@langchain/core": "0.3.43",
 		"@modelcontextprotocol/sdk": "^1.22.0",
+		"zod": "3.25.67",
 		"zod-to-json-schema": "^3.24.6"
 	},
 	"peerDependencies": {
-		"n8n-workflow": "*",
-		"zod": ">=3.23.0"
+		"n8n-workflow": "*"
+	},
+	"overrides": {
+		"zod": "3.25.67"
 	}
 }
