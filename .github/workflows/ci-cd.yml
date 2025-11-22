@@ -20,40 +20,84 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
       - name: Lint
-        run: npm run lint --if-present || echo "Linting failed but continuing"
+        run: npm run lint
+
+      - name: Security Audit
+        run: npm audit --audit-level=high
+        continue-on-error: true
 
       - name: Build
-        run: npm run build --if-present || echo "Build script not found or build failed but continuing"
+        run: npm run build
 
       - name: Test
-        run: npm run test --if-present || echo "No tests found or tests failed but continuing"
+        run: npm test
+
+      - name: Test Coverage
+        if: matrix.node-version == 20
+        run: npm test -- --coverage
+        continue-on-error: true
 
       - name: Upload build artifacts
+        if: matrix.node-version == 20
         uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist/
 
-  release:
+      - name: Upload coverage reports
+        if: matrix.node-version == 20
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+        continue-on-error: true
+
+  validate-release:
     needs: build-and-test
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate CHANGELOG
+        run: |
+          if ! grep -q "\[$(npm pkg get version | tr -d '"')\]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md must be updated with current version"
+            exit 1
+          fi
+
+      - name: Check for breaking changes
+        run: |
+          if git log --format=%B -n 1 | grep -q "BREAKING CHANGE"; then
+            echo "breaking_change=true" >> $GITHUB_ENV
+          fi
+
+  release:
+    needs: [build-and-test, validate-release]
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     permissions:
       contents: write
       packages: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -63,7 +107,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
@@ -75,6 +119,11 @@ jobs:
           name: dist
           path: dist/
 
+      - name: Verify package contents
+        run: |
+          npm pack --dry-run
+          echo "Package contents verified"
+
       - name: Configure Git
         run: |
           git config user.name "GitHub Actions"
@@ -85,15 +134,24 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: |
           RELEASE_TYPE="${{ github.event.inputs.release_type }}"
-          npm version $RELEASE_TYPE -m "Bump version to %s [skip ci]"
+          npm version $RELEASE_TYPE -m "chore: bump version to %s [skip ci]"
           echo "new_version=$(npm pkg get version | tr -d '"')" >> $GITHUB_OUTPUT
 
       - name: Auto bump patch version
         id: auto_bump
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          npm version patch -m "Bump version to %s [skip ci]"
+          npm version patch -m "chore: bump version to %s [skip ci]"
           echo "new_version=$(npm pkg get version | tr -d '"')" >> $GITHUB_OUTPUT
+
+      - name: Extract CHANGELOG for release
+        id: changelog
+        run: |
+          VERSION=$(npm pkg get version | tr -d '"')
+          CHANGELOG_CONTENT=$(sed -n "/## \[$VERSION\]/,/## \[/p" CHANGELOG.md | sed '$d')
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG_CONTENT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Push changes
         run: |
@@ -106,10 +164,11 @@ jobs:
         with:
           tag_name: v${{ steps.bump_version.outputs.new_version || steps.auto_bump.outputs.new_version }}
           name: Release v${{ steps.bump_version.outputs.new_version || steps.auto_bump.outputs.new_version }}
+          body: ${{ steps.changelog.outputs.changelog }}
           draft: false
-          generate_release_notes: true
+          prerelease: false
 
       - name: Publish to npm
-        run: npm publish --access public
+        run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
